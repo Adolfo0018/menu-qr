@@ -1,0 +1,420 @@
+/* Los colores reales vienen de src/data/negocio.json (ver main.tsx). Estos son solo valores de respaldo. */
+:root {
+  --color-primario: #6b3e26;
+  --color-texto-sobre-primario: #ffffff;
+  --color-acento: #e8a33d;
+  --color-fondo: #faf6f1;
+  --color-superficie: #ffffff;
+  --color-texto: #2b1d14;
+  --color-texto-suave: #7a6656;
+  --color-borde: color-mix(in srgb, var(--color-texto) 12%, transparent);
+  --radio: 14px;
+  --ancho-max: 720px;
+  --alto-nav: 56px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--color-texto);
+  background: var(--color-fondo);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-fondo);
+  line-height: 1.4;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--color-primario);
+}
+
+/* Encabezado */
+.encabezado {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 28px 16px 24px;
+  background: var(--color-primario);
+  color: var(--color-texto-sobre-primario);
+}
+
+.encabezado > * {
+  min-width: 0;
+}
+
+@media (min-width: 752px) {
+  .encabezado {
+    padding-inline: calc((100% - var(--ancho-max)) / 2 + 16px);
+  }
+}
+
+.encabezado-logo {
+  flex-shrink: 0;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--color-superficie);
+}
+
+.encabezado-iniciales {
+  display: grid;
+  place-items: center;
+  background: var(--color-acento);
+  color: var(--color-primario);
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.encabezado-nombre {
+  font-size: 1.5rem;
+  line-height: 1.15;
+}
+
+.encabezado-eslogan {
+  opacity: 0.9;
+}
+
+.encabezado-horario {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+/* Barra de categorías */
+.nav-categorias {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--color-fondo);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.nav-categorias-lista {
+  display: flex;
+  gap: 8px;
+  max-width: var(--ancho-max);
+  height: var(--alto-nav);
+  margin: 0 auto;
+  padding: 10px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav-categorias-lista::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: 1px solid var(--color-borde);
+  border-radius: 999px;
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.chip-activo {
+  border-color: var(--color-primario);
+  background: var(--color-primario);
+  color: var(--color-texto-sobre-primario);
+}
+
+.chip:focus-visible,
+.boton:focus-visible {
+  outline: 3px solid var(--color-acento);
+  outline-offset: 2px;
+}
+
+/* Contenido */
+.contenido {
+  max-width: var(--ancho-max);
+  margin: 0 auto;
+  padding: 8px 16px 32px;
+}
+
+.seccion {
+  scroll-margin-top: calc(var(--alto-nav) + 8px);
+  padding-top: 20px;
+}
+
+.seccion-titulo {
+  margin-bottom: 12px;
+  font-size: 1.25rem;
+}
+
+.productos {
+  display: grid;
+  gap: 12px;
+}
+
+.producto {
+  display: flex;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  background: var(--color-superficie);
+}
+
+.producto-foto {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-acento) 18%, var(--color-superficie));
+  font-size: 2.4rem;
+}
+
+.producto-foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.producto-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.producto-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.producto-nombre {
+  margin-right: 2px;
+  font-size: 1.05rem;
+}
+
+.producto-descripcion {
+  color: var(--color-texto-suave);
+  font-size: 0.9rem;
+}
+
+.insignia {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-acento) 25%, transparent);
+  color: var(--color-texto);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.insignia-agotado {
+  background: var(--color-texto);
+  color: var(--color-superficie);
+}
+
+.producto-agotado .producto-foto,
+.producto-agotado .producto-nombre,
+.producto-agotado .producto-descripcion,
+.producto-agotado .tamanos {
+  opacity: 0.5;
+}
+
+.tamanos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tamano {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.tamano-nombre {
+  color: var(--color-texto-suave);
+  font-size: 0.85rem;
+}
+
+.tamano-precio {
+  color: var(--color-primario);
+  font-weight: 800;
+}
+
+/* Pie */
+.pie {
+  display: grid;
+  gap: 4px;
+  padding: 28px 16px 40px;
+  border-top: 1px solid var(--color-borde);
+  color: var(--color-texto-suave);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.pie-nombre {
+  color: var(--color-texto);
+  font-weight: 700;
+}
+
+.pie-redes {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.pie-nota {
+  margin-top: 8px;
+  font-size: 0.78rem;
+}
+
+/* Página del QR */
+.pagina-qr {
+  display: grid;
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+@media (min-width: 760px) {
+  .pagina-qr {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.qr-controles {
+  display: grid;
+  gap: 14px;
+}
+
+.qr-ayuda {
+  color: var(--color-texto-suave);
+}
+
+.campo {
+  display: grid;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.campo input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-borde);
+  border-radius: 10px;
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  font: inherit;
+  font-weight: 400;
+}
+
+.aviso {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-acento) 20%, transparent);
+  font-size: 0.88rem;
+}
+
+.aviso-error {
+  background: #fde2e1;
+  color: #8a1c17;
+}
+
+.qr-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.boton {
+  padding: 10px 18px;
+  border: 1px solid var(--color-primario);
+  border-radius: 10px;
+  background: var(--color-primario);
+  color: var(--color-texto-sobre-primario);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.boton-secundario {
+  background: transparent;
+  color: var(--color-primario);
+}
+
+.boton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.qr-tarjeta {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 28px 20px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  background: #ffffff;
+  color: #000000;
+  text-align: center;
+}
+
+.qr-tarjeta-nombre {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.qr-lienzo {
+  max-width: 100%;
+  height: auto !important;
+}
+
+.qr-tarjeta-url {
+  max-width: 100%;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  .no-imprimir {
+    display: none;
+  }
+
+  .pagina-qr {
+    display: block;
+    padding: 0;
+  }
+
+  .qr-tarjeta {
+    border: none;
+    padding-top: 40px;
+  }
+}

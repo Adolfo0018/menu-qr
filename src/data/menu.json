@@ -1,0 +1,196 @@
+{
+  "categorias": [
+    {
+      "id": "frappes",
+      "nombre": "Frappés",
+      "icono": "🥤",
+      "productos": [
+        {
+          "id": "frappe-moka",
+          "nombre": "Frappé moka",
+          "descripcion": "Café, chocolate y leche, con crema batida.",
+          "foto": "",
+          "etiquetas": ["Favorito"],
+          "disponible": true,
+          "tamanos": [
+            { "nombre": "Mediano", "precio": 65 },
+            { "nombre": "Grande", "precio": 75 }
+          ]
+        },
+        {
+          "id": "frappe-cookies",
+          "nombre": "Frappé cookies & cream",
+          "descripcion": "Galleta de chocolate con crema y vainilla.",
+          "foto": "",
+          "etiquetas": [],
+          "disponible": true,
+          "tamanos": [
+            { "nombre": "Mediano", "precio": 70 },
+            { "nombre": "Grande", "precio": 80 }
+          ]
+        },
+        {
+          "id": "frappe-taro",
+          "nombre": "Frappé de taro",
+          "descripcion": "Taro cremoso, ligeramente dulce.",
+          "foto": "",
+          "etiquetas": ["Nuevo"],
+          "disponible": true,
+          "tamanos": [
+            { "nombre": "Mediano", "precio": 70 },
+            { "nombre": "Grande", "precio": 80 }
+          ]
+        },
+        {
+          "id": "frappe-matcha",
+          "nombre": "Frappé de matcha",
+          "descripcion": "Té verde matcha con leche.",
+          "foto": "",
+          "etiquetas": [],
+          "disponible": false,
+          "tamanos": [
+            { "nombre": "Mediano", "precio": 75 },
+            { "nombre": "Grande", "precio": 85 }
+          ]
+        },
+        {
+          "id": "frappe-chai",
+          "nombre": "Frappé chai",
+          "descripcion": "Té chai especiado con leche y canela.",
+          "foto": "",
+          "etiquetas": [],
+          "disponible": true,
+          "tamanos": [
+            { "nombre": "Mediano", "precio": 70 },
+            { "nombre": "Grande", "precio": 80 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "calientes",
+      "nombre": "Bebidas calientes",
+      "icono": "☕",
+      "productos": [
+        {
+          "id": "americano",
+          "nombre": "Americano",
+          "descripcion": "Café de grano recién preparado.",
+          "foto": "",
+          "etiquetas": [],
+          "disponible": true,
+          "tamanos": [
+            { "nombre": "Chico", "precio": 35 },
+            { "nombre": "Grande", "precio": 45 }
+          ]
+        },
+        {
+          "id": "latte",
+          "nombre": "Latte",
+          "descripcion": "Espresso con leche vaporizada.",
+          "foto": "",
+          "etiquetas": [],
+          "disponible": true,
+          "tamanos": [
+            { "nombre": "Chico", "precio": 45 },
+            { "nombre": "Grande", "precio": 55 }
+          ]
+        },
+        {
+          "id": "chocolate",
+          "nombre": "Chocolate caliente",
+          "descripcion": "Chocolate de mesa con leche.",
+          "foto": "",
+          "etiquetas": [],
+          "disponible": true,
+          "tamanos": [
+            { "nombre": "Chico", "precio": 40 },
+            { "nombre": "Grande", "precio": 50 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "snacks",
+      "nombre": "Snacks",
+      "icono": "🍟",
+      "productos": [
+        {
+          "id": "papas",
+          "nombre": "Papas a la francesa",
+          "descripcion": "Con sal y salsa a elegir.",
+          "foto": "",
+          "etiquetas": [],
+          "disponible": true,
+          "tamanos": [
+            { "nombre": "Chica", "precio": 40 },
+            { "nombre": "Grande", "precio": 60 }
+          ]
+        },
+        {
+          "id": "nachos",
+          "nombre": "Nachos con queso",
+          "descripcion": "Totopos con queso amarillo y jalapeños.",
+          "foto": "",
+          "etiquetas": ["Picante"],
+          "disponible": true,
+          "tamanos": [
+            { "nombre": "", "precio": 65 }
+          ]
+        },
+        {
+          "id": "hotdog",
+          "nombre": "Hot dog",
+          "descripcion": "Salchicha de pavo, tocino, cebolla y jitomate.",
+          "foto": "",
+          "etiquetas": [],
+          "disponible": true,
+          "tamanos": [
+            { "nombre": "", "precio": 55 }
+          ]
+        },
+        {
+          "id": "esquite",
+          "nombre": "Esquite",
+          "descripcion": "Elote en vaso con mayonesa, queso y chile.",
+          "foto": "",
+          "etiquetas": ["Favorito"],
+          "disponible": true,
+          "tamanos": [
+            { "nombre": "Chico", "precio": 35 },
+            { "nombre": "Grande", "precio": 50 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "postres",
+      "nombre": "Postres",
+      "icono": "🍰",
+      "productos": [
+        {
+          "id": "brownie",
+          "nombre": "Brownie",
+          "descripcion": "Brownie de chocolate, tibio.",
+          "foto": "",
+          "etiquetas": [],
+          "disponible": true,
+          "tamanos": [
+            { "nombre": "", "precio": 40 }
+          ]
+        },
+        {
+          "id": "crepa-nutella",
+          "nombre": "Crepa de Nutella",
+          "descripcion": "Con plátano o fresa.",
+          "foto": "",
+          "etiquetas": [],
+          "disponible": true,
+          "tamanos": [
+            { "nombre": "", "precio": 60 }
+          ]
+        }
+      ]
+    }
+  ]
+}
