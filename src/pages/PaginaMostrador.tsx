@@ -11,16 +11,24 @@ import {
   type DocumentData,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { mesas, negocio } from '../data'
 import { activarAudio, audioActivo, mantenerPantallaEncendida, sonarAviso } from '../lib/avisos'
 import { auth, db } from '../lib/firebase'
-import { formatearPrecio } from '../lib/formato'
+import { formatearPrecio, iniciales } from '../lib/formato'
 import { NOMBRE_TIPO, precioDeLista, referenciaCorta } from '../lib/pedido'
-import type { EstadoPedido, Pedido } from '../types'
+import type { EstadoPedido, Pedido, TipoPedido } from '../types'
 
 const ESTADOS_ACTIVOS: EstadoPedido[] = ['nuevo', 'en_preparacion']
 const RECORDATORIO_MS = 20_000
+const ICONO_TIPO: Record<TipoPedido, string> = { mesa: '📍', recoger: '🛍️', domicilio: '🛵' }
+const MOTIVOS_RECHAZO = [
+  'No contestó la llamada',
+  'Pedido falso o duplicado',
+  'Producto agotado',
+  'Fuera de la zona de entrega',
+  'Otro motivo',
+]
 
 type Sesion = { estado: 'cargando' } | { estado: 'fuera' } | { estado: 'sin-acceso'; usuario: User } | { estado: 'dentro'; usuario: User }
 
@@ -41,22 +49,46 @@ export function PaginaMostrador() {
     })
   }, [])
 
-  if (sesion.estado === 'cargando') return <p className="mostrador-centro">Cargando…</p>
+  if (sesion.estado === 'cargando') {
+    return (
+      <Acceso>
+        <span className="cargando cargando-grande" aria-label="Cargando" />
+      </Acceso>
+    )
+  }
   if (sesion.estado === 'fuera') return <InicioSesion />
   if (sesion.estado === 'sin-acceso') {
     return (
-      <div className="mostrador-centro">
-        <h1>Sin acceso</h1>
-        <p>
+      <Acceso>
+        <h2>Sin acceso</h2>
+        <p className="texto-suave">
           La cuenta <strong>{sesion.usuario.email}</strong> no está dada de alta como personal del negocio.
         </p>
-        <button type="button" className="boton" onClick={() => signOut(auth)}>
-          Salir
+        <button type="button" className="boton boton-ancho" onClick={() => signOut(auth)}>
+          Usar otra cuenta
         </button>
-      </div>
+      </Acceso>
     )
   }
   return <Tablero usuario={sesion.usuario} />
+}
+
+/** Pantalla centrada con la marca del negocio, para inicio de sesión y estados de acceso. */
+function Acceso({ children }: { children: ReactNode }) {
+  return (
+    <main className="acceso">
+      <div className="acceso-tarjeta">
+        <div className="marca">
+          <span className="marca-logo">{iniciales(negocio.nombre)}</span>
+          <div>
+            <p className="marca-nombre">{negocio.nombre}</p>
+            <p className="texto-suave">Mostrador</p>
+          </div>
+        </div>
+        {children}
+      </div>
+    </main>
+  )
 }
 
 function InicioSesion() {
@@ -79,10 +111,9 @@ function InicioSesion() {
   }
 
   return (
-    <main className="mostrador-centro">
+    <Acceso>
       <form className="login" onSubmit={entrar}>
-        <h1>Mostrador</h1>
-        <p className="texto-suave">{negocio.nombre}</p>
+        <h2>Iniciar sesión</h2>
         <label className="campo">
           <span>Correo</span>
           <input type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} autoComplete="username" required />
@@ -98,11 +129,20 @@ function InicioSesion() {
           />
         </label>
         {error && <p className="aviso aviso-error">{error}</p>}
-        <button type="submit" className="boton boton-ancho" disabled={entrando}>
-          {entrando ? 'Entrando…' : 'Entrar'}
+        <button type="submit" className="boton boton-grande boton-ancho" disabled={entrando}>
+          {entrando ? (
+            <>
+              <span className="cargando" aria-hidden="true" /> Entrando…
+            </>
+          ) : (
+            <>
+              <span>Entrar</span>
+              <span aria-hidden="true">→</span>
+            </>
+          )}
         </button>
       </form>
-    </main>
+    </Acceso>
   )
 }
 
@@ -175,53 +215,71 @@ function Tablero({ usuario }: { usuario: User }) {
     }
   }
 
-  async function cambiarEstado(id: string, estado: EstadoPedido) {
+  async function cambiarEstado(id: string, estado: EstadoPedido, motivoCancelacion?: string) {
     try {
-      await updateDoc(doc(db, 'pedidos', id), { estado, actualizadoEn: serverTimestamp() })
+      await updateDoc(doc(db, 'pedidos', id), {
+        estado,
+        actualizadoEn: serverTimestamp(),
+        ...(motivoCancelacion ? { motivoCancelacion } : {}),
+      })
     } catch {
       setError('No se pudo actualizar el pedido. Intenta de nuevo.')
     }
   }
 
   return (
-    <div className="mostrador">
-      <header className="mostrador-barra">
-        <div>
-          <h1>Mostrador</h1>
-          <p className="texto-suave">{usuario.email}</p>
+    <div className="tablero">
+      <header className="tablero-barra">
+        <div className="marca">
+          <span className="marca-logo">{iniciales(negocio.nombre)}</span>
+          <div>
+            <p className="marca-nombre">{negocio.nombre}</p>
+            <p className="texto-suave">Mostrador · {usuario.email}</p>
+          </div>
         </div>
-        <div className="mostrador-acciones">
+        <div className="tablero-acciones">
           <span className={`indicador ${conectado ? 'indicador-ok' : 'indicador-mal'}`}>
-            {conectado ? 'Conectado' : 'Sin conexión'}
+            <span className="indicador-punto" aria-hidden="true" />
+            {conectado ? 'En línea' : 'Sin conexión'}
           </span>
-          {avisos ? (
-            <span className="indicador indicador-ok">🔔 Avisos activos</span>
-          ) : (
-            <button type="button" className="boton boton-alerta" onClick={activarAvisos}>
-              🔕 Activar avisos
-            </button>
-          )}
-          <button type="button" className="boton boton-secundario" onClick={() => signOut(auth)}>
+          {avisos && <span className="indicador indicador-ok">🔔 Avisos activos</span>}
+          <button type="button" className="boton boton-secundario boton-chico" onClick={() => signOut(auth)}>
             Salir
           </button>
         </div>
       </header>
 
-      {error && <p className="aviso aviso-error mostrador-error">{error}</p>}
+      {!avisos && (
+        <div className="banda-avisos" role="alert">
+          <p>
+            <strong>🔕 Los avisos están apagados.</strong> Actívalos para escuchar cada pedido nuevo y mantener la
+            pantalla encendida.
+          </p>
+          <button type="button" className="boton boton-alerta" onClick={activarAvisos}>
+            Activar avisos
+          </button>
+        </div>
+      )}
 
-      <div className="mostrador-columnas">
-        <Columna titulo="Nuevos" pedidos={nuevos} vacio="Sin pedidos nuevos.">
+      {error && <p className="aviso aviso-error tablero-error">{error}</p>}
+
+      <div className="tablero-columnas">
+        <Columna titulo="Nuevos" icono="🔔" pedidos={nuevos} vacio="No hay pedidos nuevos. Aquí aparecerán al instante.">
           {(p) => (
-            <button type="button" className="boton boton-ancho" onClick={() => cambiarEstado(p.id, 'en_preparacion')}>
-              Tomar pedido
-            </button>
+            <Acciones
+              principal="Tomar pedido"
+              onPrincipal={() => cambiarEstado(p.id, 'en_preparacion')}
+              onRechazar={(motivo) => cambiarEstado(p.id, 'cancelado', motivo)}
+            />
           )}
         </Columna>
-        <Columna titulo="En preparación" pedidos={enPreparacion} vacio="Nada en preparación.">
+        <Columna titulo="En preparación" icono="👨‍🍳" pedidos={enPreparacion} vacio="Nada en preparación.">
           {(p) => (
-            <button type="button" className="boton boton-secundario boton-ancho" onClick={() => cambiarEstado(p.id, 'entregado')}>
-              Marcar entregado
-            </button>
+            <Acciones
+              principal="Marcar entregado"
+              onPrincipal={() => cambiarEstado(p.id, 'entregado')}
+              onRechazar={(motivo) => cambiarEstado(p.id, 'cancelado', motivo)}
+            />
           )}
         </Columna>
       </div>
@@ -231,18 +289,19 @@ function Tablero({ usuario }: { usuario: User }) {
 
 interface PropsColumna {
   titulo: string
+  icono: string
   pedidos: Pedido[]
   vacio: string
-  children: (pedido: Pedido) => React.ReactNode
+  children: (pedido: Pedido) => ReactNode
 }
 
-function Columna({ titulo, pedidos, vacio, children }: PropsColumna) {
+function Columna({ titulo, icono, pedidos, vacio, children }: PropsColumna) {
   return (
-    <section className="mostrador-columna" aria-label={titulo}>
-      <h2>
-        {titulo} <span className="contador">{pedidos.length}</span>
+    <section className="tablero-columna" aria-label={titulo}>
+      <h2 className="tablero-columna-titulo">
+        <span aria-hidden="true">{icono}</span> {titulo} <span className="contador">{pedidos.length}</span>
       </h2>
-      {pedidos.length === 0 && <p className="texto-suave">{vacio}</p>}
+      {pedidos.length === 0 && <p className="tablero-vacio">{vacio}</p>}
       {pedidos.map((pedido) => (
         <TarjetaPedido key={pedido.id} pedido={pedido}>
           {children(pedido)}
@@ -252,11 +311,63 @@ function Columna({ titulo, pedidos, vacio, children }: PropsColumna) {
   )
 }
 
+interface PropsAcciones {
+  principal: string
+  onPrincipal: () => void
+  onRechazar: (motivo: string) => void
+}
+
+/** Botón principal y rechazo con confirmación y motivo, para no rechazar por error. */
+function Acciones({ principal, onPrincipal, onRechazar }: PropsAcciones) {
+  const [rechazando, setRechazando] = useState(false)
+  const [motivo, setMotivo] = useState(MOTIVOS_RECHAZO[0])
+
+  if (rechazando) {
+    return (
+      <div className="rechazo">
+        <p className="rechazo-titulo">¿Rechazar este pedido?</p>
+        <label className="campo">
+          <span>Motivo</span>
+          <select value={motivo} onChange={(e) => setMotivo(e.target.value)}>
+            {MOTIVOS_RECHAZO.map((m) => (
+              <option key={m}>{m}</option>
+            ))}
+          </select>
+        </label>
+        <div className="rechazo-botones">
+          <button type="button" className="boton boton-secundario" onClick={() => setRechazando(false)}>
+            Volver
+          </button>
+          <button type="button" className="boton boton-peligro" onClick={() => onRechazar(motivo)}>
+            Sí, rechazar
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="pedido-acciones">
+      <button type="button" className="boton boton-grande" onClick={onPrincipal}>
+        <span>{principal}</span>
+        <span aria-hidden="true">→</span>
+      </button>
+      <button type="button" className="boton-texto boton-texto-peligro" onClick={() => setRechazando(true)}>
+        Rechazar
+      </button>
+    </div>
+  )
+}
+
+function minutosDesde(fecha: Date | null): number {
+  return fecha ? Math.floor((Date.now() - fecha.getTime()) / 60_000) : 0
+}
+
 function haceCuanto(fecha: Date | null): string {
   if (!fecha) return ''
-  const minutos = Math.floor((Date.now() - fecha.getTime()) / 60_000)
-  if (minutos < 1) return 'ahora'
-  if (minutos < 60) return `hace ${minutos} min`
+  const minutos = minutosDesde(fecha)
+  if (minutos < 1) return 'Ahora'
+  if (minutos < 60) return `Hace ${minutos} min`
   return fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
 }
 
@@ -279,46 +390,63 @@ function revisar(pedido: Pedido): string[] {
   return alertas
 }
 
-function TarjetaPedido({ pedido, children }: { pedido: Pedido; children: React.ReactNode }) {
+function TarjetaPedido({ pedido, children }: { pedido: Pedido; children: ReactNode }) {
   const alertas = revisar(pedido)
+  const minutos = minutosDesde(pedido.creadoEn)
+  const urgencia = minutos >= 20 ? ' tiempo-tarde' : minutos >= 10 ? ' tiempo-atento' : ''
   const titulo = pedido.tipo === 'mesa' ? `Mesa ${pedido.mesa?.numero ?? '?'}` : NOMBRE_TIPO[pedido.tipo]
 
   return (
     <article className={`pedido pedido-${pedido.tipo}${pedido.estado === 'nuevo' ? ' pedido-nuevo' : ''}`}>
       <header className="pedido-cabecera">
-        <p className="pedido-titulo">{titulo}</p>
-        <p className="texto-suave">
-          {referenciaCorta(pedido.id)} · {haceCuanto(pedido.creadoEn)}
+        <p className="pedido-titulo">
+          <span className="pedido-icono" aria-hidden="true">
+            {ICONO_TIPO[pedido.tipo]}
+          </span>
+          {titulo}
+          {pedido.estado === 'nuevo' && <span className="pedido-sello">Nuevo</span>}
         </p>
+        <div className="pedido-meta">
+          <span className={`pedido-tiempo${urgencia}`}>{haceCuanto(pedido.creadoEn)}</span>
+          <span className="pedido-ref">#{referenciaCorta(pedido.id)}</span>
+        </div>
       </header>
 
       {pedido.cliente && (
         <div className="pedido-cliente">
-          <p>
-            <strong>{pedido.cliente.nombre}</strong> · <a href={`tel:${pedido.cliente.telefono}`}>{pedido.cliente.telefono}</a>
-          </p>
-          {pedido.tipo === 'domicilio' && (
-            <p>
-              {pedido.cliente.direccion}
-              {pedido.cliente.referencias && <span className="texto-suave"> ({pedido.cliente.referencias})</span>}
-            </p>
-          )}
+          <div>
+            <p className="pedido-cliente-nombre">{pedido.cliente.nombre}</p>
+            {pedido.tipo === 'domicilio' && (
+              <p className="texto-suave">
+                {pedido.cliente.direccion}
+                {pedido.cliente.referencias && ` · ${pedido.cliente.referencias}`}
+              </p>
+            )}
+          </div>
+          <a className="boton-llamar" href={`tel:${pedido.cliente.telefono}`}>
+            📞 {pedido.cliente.telefono}
+          </a>
         </div>
       )}
 
       <ul className="pedido-lineas">
         {pedido.lineas.map((linea, i) => (
           <li key={i}>
-            <span className="pedido-cantidad">{linea.cantidad}×</span> {linea.nombre}
-            {linea.tamano && <span className="texto-suave"> · {linea.tamano}</span>}
-            {linea.nota && <p className="linea-nota">“{linea.nota}”</p>}
+            <span className="pedido-cantidad">{linea.cantidad}</span>
+            <div>
+              <p className="pedido-producto">
+                {linea.nombre}
+                {linea.tamano && <span className="texto-suave"> · {linea.tamano}</span>}
+              </p>
+              {linea.nota && <p className="pedido-nota">📝 {linea.nota}</p>}
+            </div>
           </li>
         ))}
       </ul>
 
       <p className="pedido-total">
-        Total {formatearPrecio(pedido.total)}
-        {pedido.envio > 0 && <span className="texto-suave"> (incluye envío {formatearPrecio(pedido.envio)})</span>}
+        <span>Total{pedido.envio > 0 && <span className="texto-suave"> (incluye envío {formatearPrecio(pedido.envio)})</span>}</span>
+        <strong>{formatearPrecio(pedido.total)}</strong>
       </p>
 
       {alertas.map((alerta) => (

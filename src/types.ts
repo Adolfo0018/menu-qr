@@ -76,7 +76,7 @@ export interface DatosCliente {
   referencias: string
 }
 
-export type EstadoPedido = 'nuevo' | 'en_preparacion' | 'entregado'
+export type EstadoPedido = 'nuevo' | 'en_preparacion' | 'entregado' | 'cancelado'
 
 export interface LineaPedido {
   productoId: string
@@ -99,5 +99,7 @@ export interface Pedido {
   envio: number
   total: number
   estado: EstadoPedido
+  /** Solo en pedidos rechazados por el personal. */
+  motivoCancelacion?: string
   creadoEn: Date | null
 }

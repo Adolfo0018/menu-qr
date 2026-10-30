@@ -22,12 +22,13 @@ service cloud.firestore {
       // Cualquier cliente puede crear un pedido con formato válido, pero no leer ni modificar pedidos.
       allow create: if pedidoValido(request.resource.data);
 
-      // El personal ve los pedidos y solo puede cambiarles el estado.
+      // El personal ve los pedidos y solo puede cambiarles el estado (y el motivo, si lo rechaza).
       allow read: if esPersonal();
       allow update: if esPersonal()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'actualizadoEn'])
-        && request.resource.data.estado in ['nuevo', 'en_preparacion', 'entregado']
-        && request.resource.data.actualizadoEn == request.time;
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'actualizadoEn', 'motivoCancelacion'])
+        && request.resource.data.estado in ['nuevo', 'en_preparacion', 'entregado', 'cancelado']
+        && request.resource.data.actualizadoEn == request.time
+        && (!('motivoCancelacion' in request.resource.data) || textoCorto(request.resource.data.motivoCancelacion, 120));
       allow delete: if false;
     }
 

@@ -164,7 +164,7 @@ No hay documentos previos. Todas las decisiones salen de la conversación con el
 | RN-002 | No se aceptan pedidos fuera del horario o con el interruptor cerrado. Si ambos aplican, **el interruptor manual tiene prioridad** (SUP-004). | Pendiente |
 | RN-003 | El pago se hace en caja; a domicilio, contra entrega. El sistema no cobra. | Confirmado |
 | RN-004 | El total que cuenta es el que se calcula con los precios vigentes del menú. El mostrador ve el total recalculado y no confía en el que envía el navegador (R-002). | Propuesta |
-| RN-005 | Solo el personal puede cancelar un pedido. | Pendiente (P-003) |
+| RN-005 | Solo el personal puede rechazar (cancelar) un pedido, en cualquier estado activo, con confirmación y un motivo de una lista: no contestó la llamada, pedido falso o duplicado, producto agotado, fuera de la zona de entrega u otro. El motivo queda guardado en el pedido. | Confirmado (2026-10-29) |
 | RN-006 | El folio es único y fácil de leer en voz alta (por ejemplo, número corto del día). | Propuesta |
 | RN-007 | Un pedido de mesa solo se acepta si el código del QR corresponde a una mesa vigente. | Confirmado |
 | RN-008 | El costo de envío es un monto fijo para todos los domicilios; no hay pedido mínimo. | Confirmado |
@@ -331,7 +331,7 @@ Acordado con el solicitante el 2026-10-29. Al terminar cada fase hay algo public
 | **1. Menú público** | Proyecto React publicado en Netlify. Menú leído desde un archivo del proyecto: categorías, productos, tamaños, precios y agotados. Colores, logo y textos configurables | Compartir la URL del menú, sin pedidos | Chico | RF-001, RF-003, RNF-001, RNF-005 | CA-002 (precios por tamaño), CA-003 | Node.js y cuenta de Netlify |
 | **2. Carrito y armado del pedido** | Carrito con tamaño, cantidad y nota. QR de mesa = pedido para esa mesa, sin elegir. URL = recoger o domicilio, con teléfono obligatorio y costo de envío. Resumen final, sin envío. **Generador de QR por mesa** (mesas en archivo) | Probar el flujo completo del cliente e imprimir los QR de las mesas | Chico | RF-004, RF-005, RF-006, RF-016, RN-001, RN-007, RN-008 | CA-002, CA-011 | Fase 1 |
 | **3. Pedidos en tiempo real** | Pedidos guardados en Firebase. Pantalla del mostrador en tiempo real con sonido, parpadeo y "Activar avisos". Inicio de sesión del personal. Reglas de seguridad básicas de Firestore | Recibir pedidos reales | Grande | RF-007, RF-011, RF-017, RNF-002, RNF-003, RNF-006, RNF-007 | CA-001, CA-006, CA-007, CA-012 | Fase 2 y proyecto de Firebase |
-| **4. Flujo completo del pedido** | Estados (en preparación, listo, en camino, entregado, cancelado), vista del mesero, folio corto, estado visible para el cliente, total recalculado en el mostrador | Operar el ciclo completo con barista y mesero | Mediano | RF-008, RF-009, RF-012, RF-013, RN-004, RN-005, RN-006 | CA-009 | Fase 3 |
+| **4. Flujo completo del pedido** | Estados (listo, en camino), vista del mesero, folio corto, estado visible para el cliente, total recalculado en el mostrador | Operar el ciclo completo con barista y mesero | Mediano | RF-008, RF-009, RF-012, RF-013, RN-004, RN-005, RN-006 | CA-009 | Fase 3 |
 | **5. Panel del menú** | El menú pasa a un solo documento de Firestore con el archivo como respaldo. Edición de categorías, productos, tamaños, precios y agotados | Que el dueño cambie precios y agotados sin el desarrollador | Mediano | RF-002, RF-014 | CA-003, CA-008 | Fase 3 |
 | **6. Configuración de operación** | Horario e interruptor de apertura, mesas administradas desde el panel con regeneración de código, costo de envío editable | Controlar cuándo se reciben pedidos y administrar las mesas sin el desarrollador | Mediano | RF-010, RF-015, RF-019, RF-020, RN-002 | CA-004, CA-005, CA-010 | Fase 3 (puede ir antes o después de la fase 5) |
 | **7. Salida a producción** | Protección contra pedidos falsos (App Check), revisión final de reglas, pedidos del día, aviso de privacidad, dominio y prueba con el negocio | Operar en producción | Chico a mediano | RF-018, RNF-004 | Todos | Fases 1 a 6 |
@@ -339,6 +339,7 @@ Acordado con el solicitante el 2026-10-29. Al terminar cada fase hay algo public
 ### Notas del plan
 - **La fase 1 ya se puede usar:** la URL del menú funciona como menú digital desde que se publica.
 - **Cambio del 2026-10-29:** se eliminó el "QR general". Solo las mesas tienen QR; el generador por mesa pasó de la fase 6 a la fase 2.
+- **Cambio del 2026-10-29:** "Rechazar pedido" (estado cancelado con motivo, RN-005) se adelantó de la fase 4 a la fase 3, porque el negocio lo necesita para operar. El mostrador también recibió el rediseño visual.
 - **Seguridad desde la fase 3:** las reglas de Firestore se publican junto con el primer pedido guardado; nunca se publica Firebase sin reglas.
 - **Códigos de mesa:** en las fases 2 y 3 viven en el archivo de configuración; en la fase 6 pasan al panel con regeneración.
 - **Fases 5 y 6:** son independientes entre sí; su orden se decide según lo que el negocio necesite primero.
