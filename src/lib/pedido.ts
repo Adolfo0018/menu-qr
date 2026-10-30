@@ -14,6 +14,11 @@ export function precioVigente(productoId: string, tamano: string): number | null
   return producto.tamanos.find((t) => t.nombre === tamano)?.precio ?? null
 }
 
+/** Precio de lista aunque el producto esté agotado; sirve para revisar pedidos ya enviados. */
+export function precioDeLista(productoId: string, tamano: string): number | null {
+  return productos.get(productoId)?.tamanos.find((t) => t.nombre === tamano)?.precio ?? null
+}
+
 export interface LineaResuelta extends LineaCarrito {
   producto: Producto
   precioUnitario: number
@@ -45,6 +50,11 @@ export function validarCliente(tipo: TipoPedido, datos: DatosCliente): ErroresCl
   if (datos.telefono.replace(/\D/g, '').length !== 10) errores.telefono = 'Escribe un teléfono de 10 dígitos.'
   if (tipo === 'domicilio' && !datos.direccion.trim()) errores.direccion = 'Escribe la dirección de entrega.'
   return errores
+}
+
+/** Referencia corta y legible del pedido para decirla en caja (la fase 4 trae el folio del día). */
+export function referenciaCorta(id: string): string {
+  return id.slice(-5).toUpperCase()
 }
 
 export const NOMBRE_TIPO: Record<TipoPedido, string> = {

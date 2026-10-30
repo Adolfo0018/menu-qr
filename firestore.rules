@@ -1,0 +1,70 @@
+rules_version = '2';
+
+// Reglas de seguridad de Firestore para el menú QR.
+// Se publican en la consola de Firebase (Firestore → Reglas) o con `npx firebase deploy --only firestore:rules`.
+// Si cambias la forma de un pedido en src/lib/enviarPedido.ts, actualiza pedidoValido() aquí.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Personal del negocio: un documento por usuario de Authentication, con el UID como id.
+    // Se dan de alta a mano en la consola; nadie puede escribirlos desde la app.
+    function esPersonal() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/personal/$(request.auth.uid));
+    }
+
+    match /personal/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /pedidos/{pedidoId} {
+      // Cualquier cliente puede crear un pedido con formato válido, pero no leer ni modificar pedidos.
+      allow create: if pedidoValido(request.resource.data);
+
+      // El personal ve los pedidos y solo puede cambiarles el estado.
+      allow read: if esPersonal();
+      allow update: if esPersonal()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'actualizadoEn'])
+        && request.resource.data.estado in ['nuevo', 'en_preparacion', 'entregado']
+        && request.resource.data.actualizadoEn == request.time;
+      allow delete: if false;
+    }
+
+    function textoCorto(valor, maximo) {
+      return valor is string && valor.size() <= maximo;
+    }
+
+    function mesaValida(p) {
+      return p.mesa is map
+        && p.mesa.keys().hasOnly(['numero', 'codigo'])
+        && p.mesa.numero is int && p.mesa.numero > 0 && p.mesa.numero <= 500
+        && textoCorto(p.mesa.codigo, 32)
+        && p.cliente == null;
+    }
+
+    function clienteValido(p) {
+      return p.mesa == null
+        && p.cliente is map
+        && p.cliente.keys().hasOnly(['nombre', 'telefono', 'direccion', 'referencias'])
+        && textoCorto(p.cliente.nombre, 150) && p.cliente.nombre.size() > 0
+        && p.cliente.telefono is string && p.cliente.telefono.matches('^[0-9]{10}$')
+        && textoCorto(p.cliente.direccion, 150)
+        && textoCorto(p.cliente.referencias, 150)
+        && (p.tipo != 'domicilio' || p.cliente.direccion.size() > 0);
+    }
+
+    function pedidoValido(p) {
+      return p.keys().hasOnly(['tipo', 'mesa', 'cliente', 'lineas', 'subtotal', 'envio', 'total', 'estado', 'creadoEn'])
+        && p.keys().hasAll(['tipo', 'mesa', 'cliente', 'lineas', 'subtotal', 'envio', 'total', 'estado', 'creadoEn'])
+        && p.estado == 'nuevo'
+        && p.creadoEn == request.time
+        && p.tipo in ['mesa', 'recoger', 'domicilio']
+        && ((p.tipo == 'mesa' && mesaValida(p)) || (p.tipo != 'mesa' && clienteValido(p)))
+        && p.lineas is list && p.lineas.size() > 0 && p.lineas.size() <= 30
+        && p.subtotal is number && p.subtotal >= 0
+        && p.envio is number && p.envio >= 0
+        && p.total is number && p.total >= 0 && p.total <= 50000;
+    }
+  }
+}

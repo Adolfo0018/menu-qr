@@ -3,7 +3,7 @@
 Menú digital para un negocio de frappés y snacks, hecho con React + Vite y publicado en Netlify.
 La definición completa y el plan por fases están en [docs/documento-funcional-mvp.md](docs/documento-funcional-mvp.md).
 
-**Fase actual: 2 — Carrito y armado del pedido.** El cliente arma su pedido y ve el resumen, pero todavía no se envía: eso llega en la fase 3 con Firebase.
+**Fase actual: 3 — Pedidos en tiempo real.** Los pedidos se guardan en Firebase (Firestore) y aparecen en la pantalla del mostrador (`/mostrador`) con sonido y parpadeo.
 
 ## Cómo entran los clientes
 
@@ -34,6 +34,42 @@ Solo las mesas tienen QR. Los pedidos de fuera no usan QR.
 | `/` | Menú para pedidos de fuera (la URL que se comparte) |
 | `/?m=CODIGO` | Menú abierto desde el QR de una mesa (ver "Mesas") |
 | `/qr` | QR de todas las mesas: descarga en PNG o imprime todos |
+| `/mostrador` | Pantalla de pedidos para el personal (requiere inicio de sesión) |
+
+## Firebase
+
+Proyecto: `menu-4de7c`, plan Spark (gratuito). La configuración web está en `src/lib/firebase.ts`: no es secreta, lo que protege los datos son las reglas de `firestore.rules`.
+
+| Colección | Qué guarda | Quién escribe |
+|---|---|---|
+| `pedidos` | Un documento por pedido | Clientes crean; el personal solo cambia `estado` |
+| `personal` | Un documento por persona del negocio, con el **UID** de Authentication como id | Solo a mano desde la consola |
+
+### Publicar las reglas de seguridad
+
+Cada vez que cambie `firestore.rules`:
+
+1. Consola de Firebase → **Bases de datos y almacenamiento → Firestore → Reglas**.
+2. Reemplaza todo el contenido por el de `firestore.rules` y da clic en **Publicar**.
+
+### Dar de alta a alguien del personal
+
+1. **Seguridad → Authentication → Usuarios → Agregar usuario**: correo y contraseña. Copia el **UID** que aparece en la lista.
+2. **Firestore → Datos → Iniciar colección** (o abre `personal` si ya existe):
+   - ID de la colección: `personal`
+   - ID del documento: el **UID** copiado
+   - Campo: `nombre` (string) con el nombre de la persona.
+3. Esa persona ya puede entrar en `/mostrador`.
+
+Para quitarle el acceso, borra su documento en `personal` (y, si quieres, su usuario en Authentication).
+
+Recomendado: en **Authentication → Configuración → Acciones del usuario**, desactiva **Habilitar la creación (registro)** para que nadie pueda crear cuentas desde fuera.
+
+### Pantalla del mostrador
+
+- Al abrirla, toca **Activar avisos**: los navegadores no reproducen sonido hasta que alguien toca la página. También mantiene la pantalla encendida mientras la pestaña esté visible.
+- Cada pedido nuevo suena y parpadea hasta que alguien lo **toma**; mientras haya pedidos sin tomar, suena un recordatorio cada 20 segundos.
+- La tarjeta avisa si el código de mesa no es válido o si el total no coincide con los precios del menú.
 
 ## Cómo editar el menú
 

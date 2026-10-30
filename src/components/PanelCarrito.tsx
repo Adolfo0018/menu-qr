@@ -6,6 +6,7 @@ import { formatearPrecio } from '../lib/formato'
 import {
   calcularTotales,
   NOMBRE_TIPO,
+  referenciaCorta,
   resolverLineas,
   validarCliente,
   type ErroresCliente,
@@ -39,8 +40,11 @@ export function PanelCarrito({ abierto, onCerrar, mesa }: Props) {
 }
 
 function Contenido({ onCerrar, mesa }: Omit<Props, 'abierto'>) {
-  const { lineas: lineasCarrito, cambiarCantidad, quitar } = useCarrito()
-  const [paso, setPaso] = useState<'carrito' | 'resumen'>('carrito')
+  const { lineas: lineasCarrito, cambiarCantidad, quitar, vaciar } = useCarrito()
+  const [paso, setPaso] = useState<'carrito' | 'resumen' | 'enviado'>('carrito')
+  const [enviando, setEnviando] = useState(false)
+  const [errorEnvio, setErrorEnvio] = useState('')
+  const [referencia, setReferencia] = useState('')
   const [tipo, setTipo] = useState<TipoPedido>(mesa ? 'mesa' : 'recoger')
   const [cliente, setCliente] = useState<DatosCliente>(() => ({ ...CLIENTE_VACIO, ...leer<Partial<DatosCliente>>(CLAVE_CLIENTE) }))
   const [errores, setErrores] = useState<ErroresCliente>({})
@@ -61,6 +65,26 @@ function Contenido({ onCerrar, mesa }: Omit<Props, 'abierto'>) {
     const encontrados = validarCliente(tipo, cliente)
     setErrores(encontrados)
     if (Object.keys(encontrados).length === 0) setPaso('resumen')
+  }
+
+  async function enviar() {
+    setEnviando(true)
+    setErrorEnvio('')
+    try {
+      const { enviarPedido } = await import('../lib/enviarPedido')
+      const id = await enviarPedido({ tipo, mesa, cliente, lineas })
+      setReferencia(referenciaCorta(id))
+      setPaso('enviado')
+      vaciar()
+    } catch {
+      setErrorEnvio('No se pudo enviar tu pedido. Revisa tu conexión e intenta de nuevo, o pide directamente en caja.')
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  if (paso === 'enviado') {
+    return <Confirmacion tipo={tipo} mesa={mesa} cliente={cliente} referencia={referencia} onCerrar={onCerrar} />
   }
 
   if (lineas.length === 0) {
@@ -86,6 +110,9 @@ function Contenido({ onCerrar, mesa }: Omit<Props, 'abierto'>) {
         cliente={cliente}
         lineas={lineas}
         totales={totales}
+        enviando={enviando}
+        error={errorEnvio}
+        onEnviar={enviar}
         onEditar={() => setPaso('carrito')}
         onCerrar={onCerrar}
       />
@@ -249,11 +276,14 @@ interface PropsResumen {
   cliente: DatosCliente
   lineas: LineaResuelta[]
   totales: { subtotal: number; envio: number; total: number }
+  enviando: boolean
+  error: string
+  onEnviar: () => void
   onEditar: () => void
   onCerrar: () => void
 }
 
-function Resumen({ tipo, mesa, cliente, lineas, totales, onEditar, onCerrar }: PropsResumen) {
+function Resumen({ tipo, mesa, cliente, lineas, totales, enviando, error, onEnviar, onEditar, onCerrar }: PropsResumen) {
   return (
     <div className="panel">
       <div className="dialogo-encabezado">
@@ -296,17 +326,52 @@ function Resumen({ tipo, mesa, cliente, lineas, totales, onEditar, onCerrar }: P
       <div className="aviso">
         {tipo !== 'mesa' && <p>Te llamaremos al {cliente.telefono.trim()} para confirmar tu pedido.</p>}
         <p>{PAGO[tipo]}</p>
-        <p>Muy pronto podrás enviar tu pedido desde aquí; por ahora, muestra este resumen al hacer tu pedido.</p>
       </div>
 
+      {error && (
+        <p className="aviso aviso-error" role="alert">
+          {error}
+        </p>
+      )}
+
       <div className="resumen-acciones">
-        <button type="button" className="boton boton-secundario" onClick={onEditar}>
+        <button type="button" className="boton boton-secundario" onClick={onEditar} disabled={enviando}>
           Editar pedido
         </button>
-        <button type="button" className="boton" disabled>
-          Enviar pedido
+        <button type="button" className="boton" onClick={onEnviar} disabled={enviando}>
+          {enviando ? 'Enviando…' : 'Enviar pedido'}
         </button>
       </div>
+    </div>
+  )
+}
+
+interface PropsConfirmacion {
+  tipo: TipoPedido
+  mesa: Mesa | null
+  cliente: DatosCliente
+  referencia: string
+  onCerrar: () => void
+}
+
+function Confirmacion({ tipo, mesa, cliente, referencia, onCerrar }: PropsConfirmacion) {
+  return (
+    <div className="panel confirmacion">
+      <p className="confirmacion-icono" aria-hidden="true">
+        ✅
+      </p>
+      <h2>¡Pedido enviado!</h2>
+      <p className="confirmacion-referencia">
+        Referencia <strong>{referencia}</strong>
+      </p>
+      <div className="aviso">
+        {tipo === 'mesa' && mesa && <p>Lo estamos preparando y te lo llevamos a la mesa {mesa.numero}.</p>}
+        {tipo !== 'mesa' && <p>Te llamaremos al {cliente.telefono.trim()} para confirmar tu pedido.</p>}
+        <p>{PAGO[tipo]}</p>
+      </div>
+      <button type="button" className="boton boton-ancho" onClick={onCerrar}>
+        Volver al menú
+      </button>
     </div>
   )
 }

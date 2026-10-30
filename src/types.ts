@@ -75,3 +75,29 @@ export interface DatosCliente {
   direccion: string
   referencias: string
 }
+
+export type EstadoPedido = 'nuevo' | 'en_preparacion' | 'entregado'
+
+export interface LineaPedido {
+  productoId: string
+  nombre: string
+  tamano: string
+  cantidad: number
+  nota: string
+  precioUnitario: number
+  importe: number
+}
+
+/** Pedido tal como se guarda en Firestore (colección "pedidos"). */
+export interface Pedido {
+  id: string
+  tipo: TipoPedido
+  mesa: Mesa | null
+  cliente: DatosCliente | null
+  lineas: LineaPedido[]
+  subtotal: number
+  envio: number
+  total: number
+  estado: EstadoPedido
+  creadoEn: Date | null
+}
