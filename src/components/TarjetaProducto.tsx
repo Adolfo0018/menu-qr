@@ -18,13 +18,13 @@ export function TarjetaProducto({ producto, icono, onAgregar }: Props) {
         ) : (
           <span aria-hidden="true">{icono}</span>
         )}
+        {agotado && <span className="producto-sello">Agotado</span>}
       </div>
       <div className="producto-info">
         <div className="producto-cabecera">
           <h3 className="producto-nombre">{producto.nombre}</h3>
-          {agotado && <span className="insignia insignia-agotado">Agotado</span>}
           {producto.etiquetas.map((etiqueta) => (
-            <span key={etiqueta} className="insignia">
+            <span key={etiqueta} className={`insignia insignia-${etiqueta.toLowerCase()}`}>
               {etiqueta}
             </span>
           ))}
@@ -46,7 +46,7 @@ export function TarjetaProducto({ producto, icono, onAgregar }: Props) {
               onClick={() => onAgregar(producto)}
               aria-label={`Agregar ${producto.nombre}`}
             >
-              +
+              <span aria-hidden="true">+</span>
             </button>
           )}
         </div>

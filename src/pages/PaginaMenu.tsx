@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { AvisoFlotante, type AvisoBreve } from '../components/Aviso'
 import { BarraCarrito } from '../components/BarraCarrito'
 import { Encabezado } from '../components/Encabezado'
 import { NavCategorias } from '../components/NavCategorias'
@@ -18,8 +19,10 @@ const categorias = menu.categorias.filter((c) => c.productos.length > 0)
 export function PaginaMenu() {
   const [activa, setActiva] = useState(categorias[0]?.id ?? '')
   const [{ mesa, codigoInvalido }] = useState(detectarMesa)
-  const [productoElegido, setProductoElegido] = useState<Producto | null>(null)
+  const [elegido, setElegido] = useState<{ producto: Producto; icono: string } | null>(null)
   const [carritoAbierto, setCarritoAbierto] = useState(false)
+  const [aviso, setAviso] = useState<AvisoBreve | null>(null)
+  const ocultarAviso = useCallback(() => setAviso(null), [])
 
   // Marca en la barra la categoría que se está viendo al hacer scroll.
   useEffect(() => {
@@ -45,9 +48,17 @@ export function PaginaMenu() {
   return (
     <ProveedorCarrito>
       <Encabezado />
-      {mesa && <p className="franja">📍 Estás en la mesa {mesa.numero}</p>}
+      {mesa && (
+        <div className="mesa-aviso">
+          <span className="mesa-aviso-numero">{mesa.numero}</span>
+          <p>
+            <strong>Estás en la mesa {mesa.numero}</strong>
+            <span>Tu pedido llega directo a tu mesa</span>
+          </p>
+        </div>
+      )}
       {codigoInvalido && (
-        <p className="franja franja-alerta">
+        <p className="mesa-aviso mesa-aviso-alerta">
           Este QR de mesa ya no es válido. Escanea el QR de tu mesa o pide para recoger o a domicilio.
         </p>
       )}
@@ -61,7 +72,11 @@ export function PaginaMenu() {
             aria-labelledby={`titulo-${categoria.id}`}
           >
             <h2 id={`titulo-${categoria.id}`} className="seccion-titulo">
-              <span aria-hidden="true">{categoria.icono}</span> {categoria.nombre}
+              <span className="seccion-icono" aria-hidden="true">
+                {categoria.icono}
+              </span>
+              {categoria.nombre}
+              <span className="seccion-cantidad">{categoria.productos.length}</span>
             </h2>
             <div className="productos">
               {categoria.productos.map((producto) => (
@@ -69,7 +84,7 @@ export function PaginaMenu() {
                   key={producto.id}
                   producto={producto}
                   icono={categoria.icono}
-                  onAgregar={setProductoElegido}
+                  onAgregar={(producto) => setElegido({ producto, icono: categoria.icono })}
                 />
               ))}
             </div>
@@ -77,8 +92,14 @@ export function PaginaMenu() {
         ))}
       </main>
       <PiePagina />
+      <AvisoFlotante aviso={aviso} onOcultar={ocultarAviso} />
       <BarraCarrito onAbrir={() => setCarritoAbierto(true)} />
-      <SelectorProducto producto={productoElegido} onCerrar={() => setProductoElegido(null)} />
+      <SelectorProducto
+        producto={elegido?.producto ?? null}
+        icono={elegido?.icono ?? ''}
+        onCerrar={() => setElegido(null)}
+        onAgregado={(texto) => setAviso({ texto, id: Date.now() })}
+      />
       <PanelCarrito abierto={carritoAbierto} onCerrar={() => setCarritoAbierto(false)} mesa={mesa} />
     </ProveedorCarrito>
   )

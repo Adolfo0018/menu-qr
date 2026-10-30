@@ -10,10 +10,13 @@ export function BarraCarrito({ onAbrir }: { onAbrir: () => void }) {
 
   return (
     <div className="barra-carrito">
-      <button type="button" className="boton boton-ancho barra-carrito-boton" onClick={onAbrir}>
-        <span className="barra-carrito-cantidad">{totalArticulos}</span>
-        <span>Ver mi pedido</span>
-        <span>{formatearPrecio(subtotal)}</span>
+      <button type="button" className="barra-carrito-boton" onClick={onAbrir}>
+        {/* La key reinicia la animación cada vez que cambia la cantidad. */}
+        <span key={totalArticulos} className="barra-carrito-cantidad">
+          {totalArticulos}
+        </span>
+        <span className="barra-carrito-texto">Ver mi pedido</span>
+        <span className="barra-carrito-total">{formatearPrecio(subtotal)}</span>
       </button>
     </div>
   )

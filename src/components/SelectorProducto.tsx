@@ -9,18 +9,29 @@ const LARGO_NOTA = 120
 
 interface Props {
   producto: Producto | null
+  icono: string
   onCerrar: () => void
+  onAgregado: (texto: string) => void
 }
 
-export function SelectorProducto({ producto, onCerrar }: Props) {
+export function SelectorProducto({ producto, icono, onCerrar, onAgregado }: Props) {
   return (
     <Dialogo abierto={producto !== null} onCerrar={onCerrar} titulo={producto?.nombre ?? ''} variante="hoja">
-      {producto && <Formulario key={producto.id} producto={producto} onCerrar={onCerrar} />}
+      {producto && (
+        <Formulario key={producto.id} producto={producto} icono={icono} onCerrar={onCerrar} onAgregado={onAgregado} />
+      )}
     </Dialogo>
   )
 }
 
-function Formulario({ producto, onCerrar }: { producto: Producto; onCerrar: () => void }) {
+interface PropsFormulario {
+  producto: Producto
+  icono: string
+  onCerrar: () => void
+  onAgregado: (texto: string) => void
+}
+
+function Formulario({ producto, icono, onCerrar, onAgregado }: PropsFormulario) {
   const { agregar } = useCarrito()
   const [tamano, setTamano] = useState(producto.tamanos[0].nombre)
   const [cantidad, setCantidad] = useState(1)
@@ -30,15 +41,21 @@ function Formulario({ producto, onCerrar }: { producto: Producto; onCerrar: () =
   function enviar(e: FormEvent) {
     e.preventDefault()
     agregar(producto.id, tamano, cantidad, nota)
+    onAgregado(`${cantidad} × ${producto.nombre} agregado`)
     onCerrar()
   }
 
   return (
     <form className="selector" onSubmit={enviar}>
       <div className="dialogo-encabezado">
-        <div>
-          <h2>{producto.nombre}</h2>
-          {producto.descripcion && <p className="texto-suave">{producto.descripcion}</p>}
+        <div className="selector-titulo">
+          <div className="selector-foto" aria-hidden="true">
+            {producto.foto ? <img src={producto.foto} alt="" /> : icono}
+          </div>
+          <div>
+            <h2>{producto.nombre}</h2>
+            {producto.descripcion && <p className="texto-suave">{producto.descripcion}</p>}
+          </div>
         </div>
         <BotonCerrar onClick={onCerrar} />
       </div>
@@ -80,8 +97,9 @@ function Formulario({ producto, onCerrar }: { producto: Producto; onCerrar: () =
         />
       </label>
 
-      <button type="submit" className="boton boton-ancho">
-        Agregar · {formatearPrecio(precio * cantidad)}
+      <button type="submit" className="boton boton-grande boton-ancho">
+        <span>Agregar a mi pedido</span>
+        <span>{formatearPrecio(precio * cantidad)}</span>
       </button>
     </form>
   )

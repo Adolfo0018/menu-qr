@@ -31,7 +31,12 @@ export function Dialogo({ abierto, onCerrar, titulo, variante, children }: Props
         if (e.target === ref.current) onCerrar()
       }}
     >
-      {abierto && <div className="dialogo-cuerpo">{children}</div>}
+      {abierto && (
+        <div className="dialogo-cuerpo">
+          {variante === 'hoja' && <div className="dialogo-asa" aria-hidden="true" />}
+          {children}
+        </div>
+      )}
     </dialog>
   )
 }

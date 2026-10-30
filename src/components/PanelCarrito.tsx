@@ -19,6 +19,7 @@ import { BotonCerrar, Dialogo } from './Dialogo'
 const CLAVE_CLIENTE = 'menu-qr:cliente'
 const CLIENTE_VACIO: DatosCliente = { nombre: '', telefono: '', direccion: '', referencias: '' }
 const TIPOS_EXTERNOS: TipoPedido[] = ['recoger', 'domicilio']
+const ICONO_TIPO: Record<TipoPedido, string> = { mesa: '📍', recoger: '🛍️', domicilio: '🛵' }
 const PAGO: Record<TipoPedido, string> = {
   mesa: 'Pagas en caja.',
   recoger: 'Pagas en caja al recogerlo.',
@@ -125,6 +126,7 @@ function Contenido({ onCerrar, mesa }: Omit<Props, 'abierto'>) {
         <h2>Tu pedido</h2>
         <BotonCerrar onClick={onCerrar} />
       </div>
+      <Pasos actual={0} />
 
       <ul className="lineas">
         {lineas.map((linea) => (
@@ -160,6 +162,9 @@ function Contenido({ onCerrar, mesa }: Omit<Props, 'abierto'>) {
           {TIPOS_EXTERNOS.map((t) => (
             <label key={t} className="opcion">
               <input type="radio" name="tipo" value={t} checked={tipo === t} onChange={() => setTipo(t)} />
+              <span className="opcion-icono" aria-hidden="true">
+                {ICONO_TIPO[t]}
+              </span>
               <span className="opcion-texto">{NOMBRE_TIPO[t]}</span>
               {t === 'domicilio' && negocio.costoEnvio > 0 && (
                 <span className="opcion-precio">+{formatearPrecio(negocio.costoEnvio)} envío</span>
@@ -210,12 +215,35 @@ function Contenido({ onCerrar, mesa }: Omit<Props, 'abierto'>) {
         </div>
       )}
 
-      <Totales {...totales} />
-
-      <button type="submit" className="boton boton-ancho">
-        Revisar pedido
-      </button>
+      <div className="panel-pie">
+        <Totales {...totales} />
+        <button type="submit" className="boton boton-grande boton-ancho">
+          <span>Revisar pedido</span>
+          <span aria-hidden="true">→</span>
+        </button>
+        <p className="confianza">🔒 No pedimos tarjeta ni crear cuenta</p>
+      </div>
     </form>
+  )
+}
+
+const PASOS = ['Tu pedido', 'Revisar', 'Enviado']
+
+/** Indicador de avance: el cliente siempre sabe en qué paso va y cuánto le falta. */
+function Pasos({ actual }: { actual: number }) {
+  return (
+    <ol className="pasos" aria-label="Pasos del pedido">
+      {PASOS.map((paso, i) => (
+        <li
+          key={paso}
+          className={i < actual ? 'paso-hecho' : i === actual ? 'paso-actual' : undefined}
+          aria-current={i === actual ? 'step' : undefined}
+        >
+          <span className="paso-marca">{i < actual ? '✓' : i + 1}</span>
+          {paso}
+        </li>
+      ))}
+    </ol>
   )
 }
 
@@ -290,9 +318,13 @@ function Resumen({ tipo, mesa, cliente, lineas, totales, enviando, error, onEnvi
         <h2>Revisa tu pedido</h2>
         <BotonCerrar onClick={onCerrar} />
       </div>
+      <Pasos actual={1} />
 
       <section className="resumen-bloque">
-        <p className="resumen-tipo">{tipo === 'mesa' && mesa ? `Mesa ${mesa.numero}` : NOMBRE_TIPO[tipo]}</p>
+        <p className="resumen-tipo">
+          <span aria-hidden="true">{ICONO_TIPO[tipo]}</span>{' '}
+          {tipo === 'mesa' && mesa ? `Mesa ${mesa.numero}` : NOMBRE_TIPO[tipo]}
+        </p>
         {tipo !== 'mesa' && (
           <p>
             {cliente.nombre.trim()} · {cliente.telefono.trim()}
@@ -321,12 +353,10 @@ function Resumen({ tipo, mesa, cliente, lineas, totales, enviando, error, onEnvi
         ))}
       </ul>
 
-      <Totales {...totales} />
-
-      <div className="aviso">
-        {tipo !== 'mesa' && <p>Te llamaremos al {cliente.telefono.trim()} para confirmar tu pedido.</p>}
-        <p>{PAGO[tipo]}</p>
-      </div>
+      <ul className="compromisos">
+        {tipo !== 'mesa' && <li>📞 Te llamaremos al {cliente.telefono.trim()} para confirmar tu pedido.</li>}
+        <li>💵 {PAGO[tipo]}</li>
+      </ul>
 
       {error && (
         <p className="aviso aviso-error" role="alert">
@@ -334,13 +364,22 @@ function Resumen({ tipo, mesa, cliente, lineas, totales, enviando, error, onEnvi
         </p>
       )}
 
-      <div className="resumen-acciones">
-        <button type="button" className="boton boton-secundario" onClick={onEditar} disabled={enviando}>
-          Editar pedido
-        </button>
-        <button type="button" className="boton" onClick={onEnviar} disabled={enviando}>
-          {enviando ? 'Enviando…' : 'Enviar pedido'}
-        </button>
+      <div className="panel-pie">
+        <Totales {...totales} />
+        <div className="resumen-acciones">
+          <button type="button" className="boton boton-secundario" onClick={onEditar} disabled={enviando}>
+            Editar
+          </button>
+          <button type="button" className="boton boton-grande" onClick={onEnviar} disabled={enviando} aria-busy={enviando}>
+            {enviando ? (
+              <>
+                <span className="cargando" aria-hidden="true" /> Enviando…
+              </>
+            ) : (
+              'Enviar pedido'
+            )}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -357,19 +396,23 @@ interface PropsConfirmacion {
 function Confirmacion({ tipo, mesa, cliente, referencia, onCerrar }: PropsConfirmacion) {
   return (
     <div className="panel confirmacion">
-      <p className="confirmacion-icono" aria-hidden="true">
-        ✅
-      </p>
+      <Pasos actual={2} />
+      <svg className="confirmacion-check" viewBox="0 0 52 52" aria-hidden="true">
+        <circle cx="26" cy="26" r="24" />
+        <path d="M15 27 l7 7 l15 -16" />
+      </svg>
       <h2>¡Pedido enviado!</h2>
-      <p className="confirmacion-referencia">
-        Referencia <strong>{referencia}</strong>
-      </p>
-      <div className="aviso">
-        {tipo === 'mesa' && mesa && <p>Lo estamos preparando y te lo llevamos a la mesa {mesa.numero}.</p>}
-        {tipo !== 'mesa' && <p>Te llamaremos al {cliente.telefono.trim()} para confirmar tu pedido.</p>}
-        <p>{PAGO[tipo]}</p>
+      <p className="texto-suave">Ya llegó al mostrador.</p>
+      <div className="ticket">
+        <span>Tu referencia</span>
+        <strong>{referencia}</strong>
       </div>
-      <button type="button" className="boton boton-ancho" onClick={onCerrar}>
+      <ul className="compromisos">
+        {tipo === 'mesa' && mesa && <li>📍 Te lo llevamos a la mesa {mesa.numero}.</li>}
+        {tipo !== 'mesa' && <li>📞 Te llamaremos al {cliente.telefono.trim()} para confirmar tu pedido.</li>}
+        <li>💵 {PAGO[tipo]}</li>
+      </ul>
+      <button type="button" className="boton boton-grande boton-ancho" onClick={onCerrar}>
         Volver al menú
       </button>
     </div>

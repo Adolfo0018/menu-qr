@@ -1,21 +1,36 @@
 import { negocio } from '../data'
 import { iniciales } from '../lib/formato'
 
+const GARANTIAS = [
+  { icono: '⚡', texto: 'Directo a cocina' },
+  { icono: '🔒', texto: 'Sin registro' },
+  { icono: '💵', texto: 'Pagas al recibir' },
+]
+
 export function Encabezado() {
   return (
-    <header className="encabezado">
-      {negocio.logo ? (
-        <img className="encabezado-logo" src={negocio.logo} alt={`Logo de ${negocio.nombre}`} />
-      ) : (
-        <div className="encabezado-logo encabezado-iniciales" aria-hidden="true">
-          {iniciales(negocio.nombre)}
+    <header className="hero">
+      <div className="hero-contenido">
+        {negocio.logo ? (
+          <img className="hero-logo" src={negocio.logo} alt={`Logo de ${negocio.nombre}`} />
+        ) : (
+          <div className="hero-logo hero-iniciales" aria-hidden="true">
+            {iniciales(negocio.nombre)}
+          </div>
+        )}
+        <div className="hero-texto">
+          <h1 className="hero-nombre">{negocio.nombre}</h1>
+          {negocio.eslogan && <p className="hero-eslogan">{negocio.eslogan}</p>}
         </div>
-      )}
-      <div>
-        <h1 className="encabezado-nombre">{negocio.nombre}</h1>
-        {negocio.eslogan && <p className="encabezado-eslogan">{negocio.eslogan}</p>}
-        {negocio.horario && <p className="encabezado-horario">🕒 {negocio.horario}</p>}
       </div>
+      {negocio.horario && <p className="hero-horario">🕒 {negocio.horario}</p>}
+      <ul className="garantias" aria-label="Cómo funciona">
+        {GARANTIAS.map((g) => (
+          <li key={g.texto}>
+            <span aria-hidden="true">{g.icono}</span> {g.texto}
+          </li>
+        ))}
+      </ul>
     </header>
   )
 }
