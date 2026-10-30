@@ -4,9 +4,10 @@ import type { Producto } from '../types'
 interface Props {
   producto: Producto
   icono: string
+  onAgregar: (producto: Producto) => void
 }
 
-export function TarjetaProducto({ producto, icono }: Props) {
+export function TarjetaProducto({ producto, icono, onAgregar }: Props) {
   const agotado = !producto.disponible
 
   return (
@@ -29,14 +30,26 @@ export function TarjetaProducto({ producto, icono }: Props) {
           ))}
         </div>
         {producto.descripcion && <p className="producto-descripcion">{producto.descripcion}</p>}
-        <ul className="tamanos" aria-label="Precios">
-          {producto.tamanos.map((tamano) => (
-            <li key={tamano.nombre || 'unico'} className="tamano">
-              {tamano.nombre && <span className="tamano-nombre">{tamano.nombre}</span>}
-              <span className="tamano-precio">{formatearPrecio(tamano.precio)}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="producto-pie">
+          <ul className="tamanos" aria-label="Precios">
+            {producto.tamanos.map((tamano) => (
+              <li key={tamano.nombre || 'unico'} className="tamano">
+                {tamano.nombre && <span className="tamano-nombre">{tamano.nombre}</span>}
+                <span className="tamano-precio">{formatearPrecio(tamano.precio)}</span>
+              </li>
+            ))}
+          </ul>
+          {!agotado && (
+            <button
+              type="button"
+              className="boton-agregar"
+              onClick={() => onAgregar(producto)}
+              aria-label={`Agregar ${producto.nombre}`}
+            >
+              +
+            </button>
+          )}
+        </div>
       </div>
     </article>
   )

@@ -6,6 +6,8 @@ export interface Negocio {
   /** URL pública del menú; se usa para generar el QR. Vacío = la URL desde donde se abre. */
   urlPublica: string
   moneda: string
+  /** Costo fijo que se suma a los pedidos a domicilio. */
+  costoEnvio: number
   horario: string
   direccion: string
   telefono: string
@@ -48,4 +50,28 @@ export interface Categoria {
 
 export interface Menu {
   categorias: Categoria[]
+}
+
+export interface Mesa {
+  numero: number
+  /** Código difícil de adivinar que va en el QR de la mesa (?m=codigo). */
+  codigo: string
+}
+
+export type TipoPedido = 'mesa' | 'recoger' | 'domicilio'
+
+export interface LineaCarrito {
+  /** productoId|tamano|nota: dos líneas iguales se juntan en una. */
+  id: string
+  productoId: string
+  tamano: string
+  cantidad: number
+  nota: string
+}
+
+export interface DatosCliente {
+  nombre: string
+  telefono: string
+  direccion: string
+  referencias: string
 }

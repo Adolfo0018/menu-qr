@@ -1,7 +1,7 @@
 # Documento funcional: Menú digital con QR y pedidos (MVP)
 
 - **Estado:** Listo para estimación (quedan pendientes menores, no bloqueantes)
-- **Versión:** 0.3
+- **Versión:** 0.4
 - **Fecha:** 2026-10-29
 - **Solicitante:** Desarrollador (proyecto personal)
 - **Responsable de análisis:** Claude
@@ -49,6 +49,9 @@ No hay documentos previos. Todas las decisiones salen de la conversación con el
 | Aviso de pedido nuevo | Sonido y parpadeo hasta que alguien lo toma | ENT-01 (resuelve P-005) |
 | Fotos | Solo el desarrollador las agrega o cambia en el proyecto | ENT-01 (resuelve P-013) |
 | Cuentas | Firebase y Netlify a nombre del desarrollador, que administra el servicio | ENT-01 (resuelve P-014) |
+| Origen del pedido | **QR de mesa = comedor:** el cliente no elige tipo de pedido, siempre es para su mesa. **URL del menú (sin QR) = fuera del local:** el cliente elige recoger o domicilio. No existe "comer aquí" sin QR de mesa; quien esté en el local sin mesa pide en caja | ENT-01 (2026-10-29) |
+| Verificación | En recoger y domicilio el teléfono es obligatorio porque el negocio llama para confirmar que el pedido es real | ENT-01 (2026-10-29) |
+| Uso del QR | **Solo las mesas del comedor tienen QR.** No hay QR general: los clientes de fuera entran por la URL del menú, que se comparte en redes y WhatsApp | ENT-01 (2026-10-29) |
 
 ## 4. Actores y permisos
 | Actor | Qué hace | Permisos |
@@ -79,7 +82,7 @@ No hay documentos previos. Todas las decisiones salen de la conversación con el
   - horario e interruptor de apertura;
   - cantidad de mesas y regeneración del código de cada mesa;
   - costo de envío a domicilio.
-- **Generador de QR:** uno por mesa (con su código) y uno general para recoger o domicilio.
+- **Generador de QR:** uno por mesa, con su código. Los pedidos de fuera no usan QR, sino la URL del menú.
 - **Publicación:** en Netlify, con reglas de seguridad de Firestore.
 
 ### Excluido (MVP)
@@ -138,7 +141,7 @@ No hay documentos previos. Todas las decisiones salen de la conversación con el
 | RF-003 | El sistema debe marcar los productos agotados e impedir agregarlos al carrito. | Alta | Confirmado |
 | RF-004 | El cliente debe poder agregar productos con tamaño, cantidad y nota libre, y ver el total. | Alta | Confirmado |
 | RF-005 | El sistema debe identificar la mesa a partir del código del QR escaneado y rechazar códigos inválidos. | Alta | Confirmado |
-| RF-006 | El cliente debe poder elegir "recoger" o "domicilio" cuando no viene de una mesa, y capturar los datos requeridos. | Alta | Confirmado |
+| RF-006 | Sin QR de mesa, el cliente debe elegir "recoger" o "domicilio" y capturar los datos requeridos, con teléfono obligatorio para la llamada de confirmación. Con QR de mesa no se le ofrece elegir: el pedido es para su mesa. | Alta | Confirmado |
 | RF-007 | El sistema debe registrar el pedido en Firestore y mostrar al cliente un folio. | Alta | Confirmado |
 | RF-008 | El cliente debe poder ver el estado de su pedido en tiempo real. | Media | Pendiente (SUP-002) |
 | RF-009 | En pedidos a domicilio, el sistema debe ofrecer un botón para enviar la ubicación por WhatsApp. | Media | Confirmado |
@@ -148,7 +151,7 @@ No hay documentos previos. Todas las decisiones salen de la conversación con el
 | RF-013 | El mesero debe ver los pedidos de mesa en estado Listo. | Media | Confirmado |
 | RF-014 | El administrador debe poder editar categorías, productos, tamaños, precios, descripción y disponibilidad. | Alta | Confirmado |
 | RF-015 | El administrador debe poder configurar el horario, el interruptor de apertura y la cantidad de mesas. | Alta | Confirmado |
-| RF-016 | El sistema debe generar e imprimir o descargar los QR de cada mesa y un QR general. | Alta | Confirmado |
+| RF-016 | El sistema debe generar e imprimir o descargar los QR de cada mesa, y mostrar la URL del menú para compartirla en redes. | Alta | Confirmado |
 | RF-017 | El personal debe iniciar sesión para usar el panel y la pantalla del mostrador. | Alta | Confirmado |
 | RF-018 | El sistema debe mostrar los pedidos del día con su total. | Media | Propuesta (P-011) |
 | RF-019 | El administrador debe poder regenerar el código de una mesa; el QR anterior deja de funcionar. | Media | Confirmado |
@@ -226,7 +229,7 @@ No hay documentos previos. Todas las decisiones salen de la conversación con el
 - **Entonces:** ya no se pueden enviar pedidos, aunque se siga viendo el menú.
 
 ### CA-006 — Pedido a domicilio
-- **Dado:** un cliente que llega desde el QR general.
+- **Dado:** un cliente que abre la URL del menú, sin QR de mesa.
 - **Cuando:** elige domicilio y captura sus datos.
 - **Entonces:**
   - El pedido llega al mostrador marcado como "Domicilio", con la dirección.
@@ -284,6 +287,7 @@ No hay documentos previos. Todas las decisiones salen de la conversación con el
 | P-010 | ¿Se usará un dominio propio o el de Netlify (`nombre.netlify.app`)? | Menor |
 | P-011 | ¿Qué reportes necesita el dueño (ventas del día, productos más vendidos)? | Menor |
 | P-012 | ¿Cuánto tiempo se guardan los datos de clientes a domicilio? | Menor |
+| P-015 | La llamada de confirmación de pedidos para recoger o a domicilio, ¿debe quedar registrada en el sistema (por ejemplo, un estado "Por confirmar" antes de "En preparación")? Se decide en la fase 4 | Importante |
 
 ### Preguntas resueltas (2026-10-29)
 | ID | Resolución |
@@ -324,16 +328,17 @@ Acordado con el solicitante el 2026-10-29. Al terminar cada fase hay algo public
 
 | Fase | Qué se entrega | Al terminar, el negocio puede… | Tamaño | Requisitos | Criterios de aceptación | Depende de |
 |---|---|---|---|---|---|---|
-| **1. Menú público + QR general** | Proyecto React publicado en Netlify. Menú leído desde un archivo del proyecto: categorías, productos, tamaños, precios y agotados. Colores, logo y textos configurables. QR general | Imprimir el QR y usarlo como menú digital, sin pedidos | Chico | RF-001, RF-003, RNF-001, RNF-005 | CA-002 (precios por tamaño), CA-003 | Node.js y cuenta de Netlify |
-| **2. Carrito y armado del pedido** | Carrito con tamaño, cantidad y nota. Elección del tipo de pedido: mesa (código en archivo), recoger o domicilio, con sus datos y costo de envío. Resumen final, sin envío | Probar el flujo completo del cliente | Chico | RF-004, RF-005, RF-006, RN-001, RN-007, RN-008 | CA-002, CA-011 | Fase 1 |
+| **1. Menú público** | Proyecto React publicado en Netlify. Menú leído desde un archivo del proyecto: categorías, productos, tamaños, precios y agotados. Colores, logo y textos configurables | Compartir la URL del menú, sin pedidos | Chico | RF-001, RF-003, RNF-001, RNF-005 | CA-002 (precios por tamaño), CA-003 | Node.js y cuenta de Netlify |
+| **2. Carrito y armado del pedido** | Carrito con tamaño, cantidad y nota. QR de mesa = pedido para esa mesa, sin elegir. URL = recoger o domicilio, con teléfono obligatorio y costo de envío. Resumen final, sin envío. **Generador de QR por mesa** (mesas en archivo) | Probar el flujo completo del cliente e imprimir los QR de las mesas | Chico | RF-004, RF-005, RF-006, RF-016, RN-001, RN-007, RN-008 | CA-002, CA-011 | Fase 1 |
 | **3. Pedidos en tiempo real** | Pedidos guardados en Firebase. Pantalla del mostrador en tiempo real con sonido, parpadeo y "Activar avisos". Inicio de sesión del personal. Reglas de seguridad básicas de Firestore | Recibir pedidos reales | Grande | RF-007, RF-011, RF-017, RNF-002, RNF-003, RNF-006, RNF-007 | CA-001, CA-006, CA-007, CA-012 | Fase 2 y proyecto de Firebase |
 | **4. Flujo completo del pedido** | Estados (en preparación, listo, en camino, entregado, cancelado), vista del mesero, folio corto, estado visible para el cliente, total recalculado en el mostrador | Operar el ciclo completo con barista y mesero | Mediano | RF-008, RF-009, RF-012, RF-013, RN-004, RN-005, RN-006 | CA-009 | Fase 3 |
 | **5. Panel del menú** | El menú pasa a un solo documento de Firestore con el archivo como respaldo. Edición de categorías, productos, tamaños, precios y agotados | Que el dueño cambie precios y agotados sin el desarrollador | Mediano | RF-002, RF-014 | CA-003, CA-008 | Fase 3 |
-| **6. Configuración de operación** | Horario e interruptor de apertura, mesas con su código y regeneración, costo de envío editable, generador de QR por mesa | Controlar cuándo se reciben pedidos e imprimir los QR de cada mesa | Mediano | RF-010, RF-015, RF-016, RF-019, RF-020, RN-002 | CA-004, CA-005, CA-010 | Fase 3 (puede ir antes o después de la fase 5) |
+| **6. Configuración de operación** | Horario e interruptor de apertura, mesas administradas desde el panel con regeneración de código, costo de envío editable | Controlar cuándo se reciben pedidos y administrar las mesas sin el desarrollador | Mediano | RF-010, RF-015, RF-019, RF-020, RN-002 | CA-004, CA-005, CA-010 | Fase 3 (puede ir antes o después de la fase 5) |
 | **7. Salida a producción** | Protección contra pedidos falsos (App Check), revisión final de reglas, pedidos del día, aviso de privacidad, dominio y prueba con el negocio | Operar en producción | Chico a mediano | RF-018, RNF-004 | Todos | Fases 1 a 6 |
 
 ### Notas del plan
-- **La fase 1 ya se puede usar:** el QR funciona como menú digital desde que se publica.
+- **La fase 1 ya se puede usar:** la URL del menú funciona como menú digital desde que se publica.
+- **Cambio del 2026-10-29:** se eliminó el "QR general". Solo las mesas tienen QR; el generador por mesa pasó de la fase 6 a la fase 2.
 - **Seguridad desde la fase 3:** las reglas de Firestore se publican junto con el primer pedido guardado; nunca se publica Firebase sin reglas.
 - **Códigos de mesa:** en las fases 2 y 3 viven en el archivo de configuración; en la fase 6 pasan al panel con regeneración.
 - **Fases 5 y 6:** son independientes entre sí; su orden se decide según lo que el negocio necesite primero.

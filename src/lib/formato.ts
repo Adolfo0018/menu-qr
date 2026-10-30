@@ -20,7 +20,7 @@ export function iniciales(nombre: string): string {
     .join('')
 }
 
-/** URL que debe abrir el QR general. */
+/** URL pública del menú: base de los QR de mesa y enlace para pedidos de fuera. */
 export function urlDelMenu(): string {
   return negocio.urlPublica || window.location.origin
 }
