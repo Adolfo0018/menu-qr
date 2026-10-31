@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { mesas, negocio } from '../data'
-import { activarAudio, audioActivo, mantenerPantallaEncendida, sonarAviso } from '../lib/avisos'
+import { activarAudio, audioActivo, desactivarAvisos, mantenerPantallaEncendida, sonarAviso } from '../lib/avisos'
 import { auth, db } from '../lib/firebase'
 import { formatearPrecio, iniciales } from '../lib/formato'
 import { NOMBRE_TIPO, precioDeLista, referenciaCorta } from '../lib/pedido'
@@ -215,6 +215,11 @@ function Tablero({ usuario }: { usuario: User }) {
     }
   }
 
+  async function apagarAvisos() {
+    await desactivarAvisos()
+    setAvisos(false)
+  }
+
   async function cambiarEstado(id: string, estado: EstadoPedido, motivoCancelacion?: string) {
     try {
       await updateDoc(doc(db, 'pedidos', id), {
@@ -242,7 +247,16 @@ function Tablero({ usuario }: { usuario: User }) {
             <span className="indicador-punto" aria-hidden="true" />
             {conectado ? 'En línea' : 'Sin conexión'}
           </span>
-          {avisos && <span className="indicador indicador-ok">🔔 Avisos activos</span>}
+          {avisos && (
+            <button
+              type="button"
+              className="indicador indicador-ok indicador-boton"
+              onClick={apagarAvisos}
+              title="Silenciar los avisos y dejar que la pantalla se apague"
+            >
+              🔔 Avisos activos <span className="indicador-accion">Apagar</span>
+            </button>
+          )}
           <button type="button" className="boton boton-secundario boton-chico" onClick={() => signOut(auth)}>
             Salir
           </button>

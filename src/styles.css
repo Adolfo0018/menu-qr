@@ -1426,6 +1426,27 @@ body:has(dialog[open]) {
   color: var(--color-error);
 }
 
+.indicador-boton {
+  border: none;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.indicador-accion {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #1d6b34;
+  color: #ffffff;
+  font-size: 0.75rem;
+}
+
+.indicador-boton:focus-visible {
+  outline: 3px solid var(--color-acento);
+  outline-offset: 2px;
+}
+
 .banda-avisos {
   display: flex;
   flex-wrap: wrap;

@@ -15,6 +15,21 @@ export async function activarAudio(): Promise<boolean> {
   }
 }
 
+/** Silencia los avisos y deja que la pantalla se apague normalmente. */
+export async function desactivarAvisos(): Promise<void> {
+  try {
+    await contexto?.suspend()
+  } catch {
+    // Ya estaba detenido.
+  }
+  try {
+    await bloqueoPantalla?.release()
+  } catch {
+    // Ya estaba liberado.
+  }
+  bloqueoPantalla = null
+}
+
 export function audioActivo(): boolean {
   return contexto?.state === 'running'
 }

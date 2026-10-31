@@ -68,6 +68,7 @@ Recomendado: en **Authentication → Configuración → Acciones del usuario**, 
 ### Pantalla del mostrador
 
 - Al abrirla, toca **Activar avisos**: los navegadores no reproducen sonido hasta que alguien toca la página. También mantiene la pantalla encendida mientras la pestaña esté visible.
+- Para silenciarlos, toca **🔔 Avisos activos · Apagar** en la barra superior: deja de sonar y la pantalla se puede apagar normalmente. Los pedidos nuevos siguen llegando y parpadeando.
 - Cada pedido nuevo suena y parpadea hasta que alguien lo **toma**; mientras haya pedidos sin tomar, suena un recordatorio cada 20 segundos.
 - La tarjeta avisa si el código de mesa no es válido o si el total no coincide con los precios del menú.
 
